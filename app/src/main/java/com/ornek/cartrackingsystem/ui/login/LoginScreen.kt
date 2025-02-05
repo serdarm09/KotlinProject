@@ -16,95 +16,95 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.ornek.cartrackingsystem.ui.login.LoginContract
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     uiState: LoginContract.UiState,
-    onAction: (LoginContract.UiAction) -> Unit,
-    onNavigateToMain: () -> Unit,
-    modifier: Modifier = Modifier
+    onAction: (LoginContract.UiAction) -> Unit
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(key1 = Unit) {
-        if (uiState.isLoggedIn) {
-            onNavigateToMain()
-        }
-    }
-
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (uiState.isLoading) {
-            CircularProgressIndicator()
-        } else {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Araç Takip Sistemi",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            OutlinedTextField(
+                value = uiState.email,
+                onValueChange = { onAction(LoginContract.UiAction.EmailChanged(it)) },
+                label = { Text("E-posta") },
+                singleLine = true,
+                isError = uiState.emailError != null,
+                supportingText = {
+                    if (uiState.emailError != null) {
+                        Text(uiState.emailError)
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = uiState.password,
+                onValueChange = { onAction(LoginContract.UiAction.PasswordChanged(it)) },
+                label = { Text("Şifre") },
+                singleLine = true,
+                isError = uiState.passwordError != null,
+                supportingText = {
+                    if (uiState.passwordError != null) {
+                        Text(uiState.passwordError)
+                    }
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = if (passwordVisible) "Şifreyi gizle" else "Şifreyi göster"
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { onAction(LoginContract.UiAction.LoginClicked) },
+                enabled = !uiState.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .height(50.dp)
             ) {
-                Text(
-                    text = "Araç Takip Sistemi",
-                    style = MaterialTheme.typography.headlineMedium
-                )
-
-                OutlinedTextField(
-                    value = uiState.email,
-                    onValueChange = { email -> onAction(LoginContract.UiAction.EmailChanged(email)) },
-                    label = { Text("E-posta") },
-                    singleLine = true,
-                    isError = uiState.emailError != null,
-                    supportingText = if (uiState.emailError != null) {
-                        { Text(uiState.emailError) }
-                    } else null,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = uiState.password,
-                    onValueChange = { password -> onAction(LoginContract.UiAction.PasswordChanged(password)) },
-                    label = { Text("Şifre") },
-                    singleLine = true,
-                    isError = uiState.passwordError != null,
-                    supportingText = if (uiState.passwordError != null) {
-                        { Text(uiState.passwordError) }
-                    } else null,
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
-                    ),
-                    trailingIcon = {
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(
-                                imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                contentDescription = if (passwordVisible) "Şifreyi Gizle" else "Şifreyi Göster"
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Button(
-                    onClick = { onAction(LoginContract.UiAction.LoginClicked) },
-                    enabled = !uiState.isLoading,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Text("Giriş Yap")
-                    }
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Giriş Yap")
                 }
             }
         }

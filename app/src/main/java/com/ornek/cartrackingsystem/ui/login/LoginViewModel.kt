@@ -2,7 +2,6 @@ package com.ornek.cartrackingsystem.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ornek.cartrackingsystem.common.Resource
 import com.ornek.cartrackingsystem.data.repository.AuthRepository
 import com.ornek.cartrackingsystem.ui.login.LoginContract.UiAction
 import com.ornek.cartrackingsystem.ui.login.LoginContract.UiEffect
@@ -30,7 +29,6 @@ class LoginViewModel @Inject constructor(
     val uiEffect: Flow<UiEffect> = _uiEffect.receiveAsFlow()
 
     init {
-        // Eğer kullanıcı zaten giriş yapmışsa ana sayfaya yönlendir
         if (authRepository.isUserLoggedIn()) {
             viewModelScope.launch {
                 _uiEffect.send(UiEffect.NavigateToMain)
@@ -40,33 +38,57 @@ class LoginViewModel @Inject constructor(
 
     fun onAction(action: UiAction) {
         when (action) {
-            is UiAction.LoginClicked -> login(action.email, action.password)
+            is UiAction.EmailChanged -> {
+                _uiState.update { it.copy(
+                    email = action.email,
+                    emailError = null
+                ) }
+            }
+            is UiAction.PasswordChanged -> {
+                _uiState.update { it.copy(
+                    password = action.password,
+                    passwordError = null
+                ) }
+            }
+            is UiAction.LoginClicked -> login()
         }
     }
 
-    private fun login(email: String, password: String) {
+    private fun login() {
+        val email = uiState.value.email
+        val password = uiState.value.password
+
+        if (email.isBlank()) {
+            _uiState.update { it.copy(emailError = "E-posta boş olamaz") }
+            return
+        }
+
+        if (!email.contains("@")) {
+            _uiState.update { it.copy(emailError = "Geçerli bir e-posta adresi girin") }
+            return
+        }
+
+        if (password.isBlank()) {
+            _uiState.update { it.copy(passwordError = "Şifre boş olamaz") }
+            return
+        }
+
+        if (password.length < 6) {
+            _uiState.update { it.copy(passwordError = "Şifre en az 6 karakter olmalı") }
+            return
+        }
+
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
             try {
-                updateUiState { copy(isLoading = true) }
-                
-                when (val result = authRepository.signIn(email, password)) {
-                    is Resource.Success -> {
-                        updateUiState { copy(isLoading = false) }
-                        _uiEffect.send(UiEffect.NavigateToMain)
-                    }
-                    is Resource.Error -> {
-                        updateUiState { copy(isLoading = false) }
-                        _uiEffect.send(UiEffect.ShowError(result.exception.message ?: "Giriş yapılırken bir hata oluştu"))
-                    }
-                }
+                authRepository.signIn(email, password)
+                _uiState.update { it.copy(isLoggedIn = true) }
+                _uiEffect.send(UiEffect.NavigateToMain)
             } catch (e: Exception) {
-                updateUiState { copy(isLoading = false) }
-                _uiEffect.send(UiEffect.ShowError(e.message ?: "Beklenmeyen bir hata oluştu"))
+                _uiEffect.send(UiEffect.ShowError(e.message ?: "Giriş yapılırken bir hata oluştu"))
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
-    }
-
-    private fun updateUiState(update: UiState.() -> UiState) {
-        _uiState.update(update)
     }
 }

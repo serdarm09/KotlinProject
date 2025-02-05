@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -26,7 +26,7 @@ fun MainScreen(
                 title = { Text("Araç Takip Sistemi") },
                 actions = {
                     IconButton(onClick = { onAction(MainContract.UiAction.SignOutClicked) }) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Çıkış Yap")
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Çıkış Yap")
                     }
                 }
             )
